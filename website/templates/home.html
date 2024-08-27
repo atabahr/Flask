@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1 align="center">Netsia Ai</h1>
+<div class="chat-container">
+    <ul class="list-group list-group-flush" id="chats">
+        {% for chat in user.chats %}
+        <li class="list-group-item">{{ chat.data }}</li>
+        {% endfor %}
+    </ul>
+    <form method="POST" class="chat-form">
+        <div class="input-group">
+            <textarea name="chat" id="chat" class="form-control" rows="1" placeholder="Type your message..." oninput="adjustTextarea(this)"></textarea>
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Send Chat</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .chat-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+    }
+
+    #chats {
+        max-height: 70vh;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+
+    .chat-form {
+        width: 100%;
+    }
+
+    #chat {
+        resize: none;
+        overflow: hidden;
+    }
+
+    .input-group-append button {
+        height: 100%;
+    }
+</style>
+
+<script>
+    function adjustTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+    }
+</script>
+{% endblock %}
