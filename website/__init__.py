@@ -12,6 +12,8 @@ DB_NAME = "database.db"
 def create_app():
     app = Flask(__name__)
     app.secret_key = secrets.token_hex(16)
+#Configuring the FIREWORKS API key
+    app.config['FIREWORKS_API_KEY'] = 'DIGaPgDjUZTeWJrTIZJzOAXWWn2fS9hGCA6tcKgtlyCxs1Xm'
 #config db
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
