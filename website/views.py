@@ -26,9 +26,11 @@ def home():
 #API Call : relational format to JSON
 @views.route('/api/ask', methods=['POST'])
 def ask():
+    print(request.get_json())
     data = request.get_json()
+    print(data)
     question = data.get('question')
-    
+    print(question)
     if not question:
         return jsonify({'error': 'Question is required'}), 400
     
