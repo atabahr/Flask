@@ -1,4 +1,4 @@
-#db models 
+#python class db models 
 #in current directory . 
 from . import db
 from flask_login import UserMixin
@@ -23,6 +23,3 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(150))
 #capital case because relationship class    
     chats = db.relationship('Chat')
-
-
-

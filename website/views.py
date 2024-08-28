@@ -15,7 +15,9 @@ def home():
         if not chat:
             flash('Chat is too short!', category='error')
         else:
-            response = get_llama_response(chat)
+            # Assuming you're using the user's ID as the conversation ID
+            conversation_id = str(current_user.id)
+            response = get_llama_response(chat, conversation_id)
             new_chat = Chat(data=f"You: {chat}\nBot: {response}", user_id=current_user.id)
             db.session.add(new_chat)
             db.session.commit()
@@ -33,6 +35,8 @@ def ask():
     print(question)
     if not question:
         return jsonify({'error': 'Question is required'}), 400
-    
-    response = get_llama_response(question)
+
+    # Using a hardcoded conversation_id for the API; customize as needed
+    conversation_id = "api_conversation"
+    response = get_llama_response(question, conversation_id)
     return jsonify({'response': response})

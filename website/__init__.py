@@ -1,38 +1,40 @@
-#makes this folder a Python package 
 from flask import Flask
 import secrets
-#setting up db
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
+from dotenv import load_dotenv
+import os
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
 
+load_dotenv()  # Load environment variables from .env file
+
 def create_app():
     app = Flask(__name__)
     app.secret_key = secrets.token_hex(16)
-#Configuring the FIREWORKS API key
-    app.config['FIREWORKS_API_KEY'] = 'DIGaPgDjUZTeWJrTIZJzOAXWWn2fS9hGCA6tcKgtlyCxs1Xm'
-#config db
+
+    # Config database
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
 
-    #telling Flask Blueprints info
+    # Load FIREWORKS_API_KEY into the app config
+    app.config['FIREWORKS_API_KEY'] = os.getenv('FIREWORKS_API_KEY')
+
+    # Telling Flask Blueprints info
     from .views import views
     from .auth import auth
 
-    #registering with Flask
+    # Registering with Flask
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
-    
-    #defining models in db
+
+    # Defining models in the db
     from .models import User, Chat
-    
-    #create_database(app)
     create_database(app)
-    
-    #keeping tracks of logins  
+
+    # Keeping track of logins
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
