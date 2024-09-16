@@ -5,6 +5,7 @@ from os import path
 from flask_login import LoginManager
 from dotenv import load_dotenv
 import os
+from sqlalchemy import create_engine
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
@@ -15,13 +16,14 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = secrets.token_hex(16)
 
-    # Config database
+    # Config database with increased pool size and overflow
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,  # Increase pool size
+        'max_overflow': 20,  # Increase max overflow
+        'pool_timeout': 30,  # Timeout before giving up on a connection
+    }
     db.init_app(app)
-
-    # Load FIREWORKS_API_KEY into the app config
-    app.config['FIREWORKS_API_KEY'] = os.getenv('FIREWORKS_API_KEY')
-
     # Telling Flask Blueprints info
     from .views import views
     from .auth import auth

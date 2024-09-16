@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from .models import Chat
 from . import db
 from .ai import get_llama_response
+import requests
 
 views = Blueprint('views', __name__)
 

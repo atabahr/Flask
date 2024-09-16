@@ -1,17 +1,8 @@
-#Updating get_llama_response function, storing conversation as json 
 import json
 import os
 import requests
 from flask import current_app
 from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
-from fireworks.client import Fireworks
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Initialize API key from environment variables
-api_key = os.getenv("FIREWORKS_API_KEY")
 
 # Define the paths to the JSON files
 conversation_history_path = 'conversation_history.json'
@@ -40,18 +31,7 @@ def load_latest_message():
         print(f"File not found: {latest_message_path}")
         return None
 
-def initialize_llama():
-    llama = ChatOpenAI(
-        model="accounts/fireworks/models/llama-v3p1-405b-instruct",
-        openai_api_key=api_key,
-        openai_api_base="https://api.fireworks.ai/inference/v1"
-    )
-    print("Model initialized successfully!")
-    return llama
-
 def get_llama_response(chat_input, conversation_id):
-    llama = initialize_llama()
-    
     # Load the conversation history for the given conversation_id
     history = load_conversation_history()
     conversation_history = history.get(conversation_id, "")
@@ -59,10 +39,25 @@ def get_llama_response(chat_input, conversation_id):
     # Append the new user input to the conversation history
     conversation_history += f"<s>[INST]{chat_input}[/INST]\n"
     
-    # Generate the response using the entire conversation history
-    response = llama.invoke(conversation_history)
-    response_content = response.content
-    
+    # Ollama API call
+    url = "http://localhost:11434/v1/chat/completions"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "model": "llama2",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": chat_input},
+        ],
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        response_content = response.json()['choices'][0]['message']['content']
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        response_content = "Sorry, I couldn't process that request."
+        
     # Append the model's response to the conversation history
     conversation_history += f"Assistant: {response_content}</s>\n"
     
@@ -87,7 +82,7 @@ def handle_new_message():
     
     # Get AI response
     ai_response = get_llama_response(chat_input, conversation_id)
-    
+    print(f"AI response: {ai_response}")
 
 if __name__ == "__main__":
     handle_new_message()

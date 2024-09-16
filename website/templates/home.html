@@ -2,12 +2,18 @@
 {% block title %}Home{% endblock %}
 {% block content %}
 <h1 class="bg-text" align="center">Netsia Ai</h1>
+
 <div class="chat-container">
     <ul class="list-group list-group-flush" id="chats">
+       
         {% for chat in user.chats %}
-        <li class="list-group-item">{{ chat.data }}</li>
+        <li class="list-group-item {{ 'user-message' if chat.sender == 'user' else 'ai-message' }}">
+            {{ chat.data }}
+        </li>
         {% endfor %}
+        <li class="list-group-item" id="thinking-message" style="display: none;">AI is thinking...</li>
     </ul>
+
     <form method="POST" class="chat-form">
         <div class="input-group">
             <textarea name="chat" id="chat" class="form-control" rows="1" placeholder="Type your message..." oninput="adjustTextarea(this)"></textarea>
@@ -74,6 +80,19 @@
     .input-group-append button {
         height: 100%;
     }
+
+     /* Chat bubbles */
+     .list-group-item.user-message {
+        background-color: #cce5ff;
+        text-align: right;
+        border-radius: 20px 20px 0 20px;
+    }
+
+    .list-group-item.ai-message {
+        background-color: #d4edda;
+        text-align: left;
+        border-radius: 20px 20px 20px 0;
+    }
 </style>
 
 <script>
@@ -81,5 +100,20 @@
         textarea.style.height = 'auto';
         textarea.style.height = (textarea.scrollHeight) + 'px';
     }
+    
+    document.getElementById('chatForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Show "AI is thinking..."
+        document.getElementById('thinking-message').style.display = 'block';
+
+        // After the user sends a message, simulate AI thinking
+        // Send the form data to the backend for processing
+
+        // Hide the "AI is thinking..." message when response is received
+        setTimeout(function() {
+            document.getElementById('thinking-message').style.display = 'none';
+        }, 2000); // Simulate AI thinking time
+    });
 </script>
 {% endblock %}
