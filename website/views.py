@@ -3,6 +3,9 @@ from flask_login import login_required, current_user
 from .models import Chat
 from . import db
 from .ai import get_llama_response
+import jwt
+from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
+import os
 
 views = Blueprint('views', __name__)
 
@@ -28,15 +31,46 @@ def home():
 #API Call : relational format to JSON
 @views.route('/api/ask', methods=['POST'])
 def ask():
-    print(request.get_json())
-    data = request.get_json()
-    print(data)
-    question = data.get('question')
-    print(question)
-    if not question:
-        return jsonify({'error': 'Question is required'}), 400
+    # Access the Authorization header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'error': 'Authorization header is missing'}), 401
 
-    # Using a hardcoded conversation_id for the API; customize as needed
-    conversation_id = "api_conversation"
-    response = get_llama_response(question, conversation_id)
-    return jsonify({'response': response})
+    # Ensure the token is in "Bearer <token>" format
+    if not auth_header.startswith("Bearer "):
+        return jsonify({'error': 'Invalid token format'}), 401
+    
+    # Extract the token from the header
+    token = auth_header.split(" ")[1]
+    if not token:
+        return jsonify({'error': 'Token is missing'}), 401
+    print(token)
+    try:
+        # Decode the token using the secret key
+        decoded_token = jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=["HS256"])
+        print(decoded_token)
+        # Access the userId from the token if needed
+        user_id = decoded_token.get('userId')
+        print(f"Token valid for user: {user_id}")
+        
+        # Process the request further since the token is valid
+        data = request.get_json()
+        question = data.get('question')
+
+        if not question:
+            return jsonify({'error': 'Question is required'}), 400
+
+        # Using a hardcoded conversation_id for the API; customize as needed
+        conversation_id = "api_conversation"
+        response = get_llama_response(question, conversation_id)
+
+        return jsonify({'response': response})
+    
+    except ExpiredSignatureError:
+        return jsonify({'error': 'Token has expired'}), 401
+
+    except InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 401
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
