@@ -40,18 +40,22 @@ def get_llama_response(chat_input, conversation_id):
     conversation_history += f"<s>[INST]{chat_input}[/INST]\n"
     
     # Ollama API call
-    url = "http://localhost:11434/v1/chat/completions"
+    # url = "http://127.0.0.1:11434/v1/chat/completions"
+    url = "http://192.168.2.142:11434/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     payload = {
-        "model": "llama2",
+        "model": "llama3.1:70b",
         "messages": [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": chat_input},
-        ],
+        ]
+        # "stream": False
     }
 
     try:
+        print(payload)
         response = requests.post(url, headers=headers, json=payload)
+        print(response)
         response.raise_for_status()  # Raise an exception for HTTP errors
         response_content = response.json()['choices'][0]['message']['content']
     except requests.exceptions.RequestException as e:
