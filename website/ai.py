@@ -36,28 +36,31 @@ def get_llama_response(chat_input, conversation_id):
     history = load_conversation_history()
     conversation_history = history.get(conversation_id, "")
     
-    # Append the new user input to the conversation history
-    conversation_history += f"<s>[INST]{chat_input}[/INST]\n"
+    # Constructing the prompt with previous interactions
+    chat_prompt = f"""
+    <s>[INST] {conversation_history} {chat_input} [/INST]
+    """
     
     # Ollama API call
-    url = "http://localhost:11434/v1/chat/completions"
+    url = "http://192.168.2.142:11434/v1/chat/completions"
     headers = {"Content-Type": "application/json"}
     payload = {
-        "model": "llama2",
+        "model": "llama3.1:70b",
         "messages": [
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": chat_input},
-        ],
+            {"role": "user", "content": chat_prompt},
+        ]
     }
 
     try:
+        print(payload)
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response.raise_for_status()
         response_content = response.json()['choices'][0]['message']['content']
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         response_content = "Sorry, I couldn't process that request."
-        
+    
     # Append the model's response to the conversation history
     conversation_history += f"Assistant: {response_content}</s>\n"
     
