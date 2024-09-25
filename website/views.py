@@ -44,7 +44,6 @@ def ask():
     token = auth_header.split(" ")[1]
     if not token:
         return jsonify({'error': 'Token is missing'}), 401
-    print(token)
     try:
         # Decode the token using the secret key
         decoded_token = jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=["HS256"])
