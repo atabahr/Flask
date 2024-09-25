@@ -2,7 +2,10 @@ import json
 import os
 import requests
 from flask import current_app
-from langchain_openai import ChatOpenAI
+
+
+# Load a tokenizer that is compatible with LLaMA models
+
 
 # Define the paths to the JSON files
 conversation_history_path = 'conversation_history.json'
@@ -12,6 +15,8 @@ latest_message_path = 'latest_message.json'
 def load_conversation_history():
     try:
         with open(conversation_history_path, 'r') as file:
+            # Example usage: counting tokens in your conversation history
+            
             history = json.load(file)
     except FileNotFoundError:
         history = {}
@@ -36,34 +41,34 @@ def get_llama_response(chat_input, conversation_id):
     history = load_conversation_history()
     conversation_history = history.get(conversation_id, "")
     
-    # Append the new user input to the conversation history
-    conversation_history += f"<s>[INST]{chat_input}[/INST]\n"
+    # Constructing the prompt with previous interactions
+    chat_prompt = f"""
+    "Using this conversation history: {conversation_history}, whereby you are the 'Assistant', and assist the 'User'. Respond to this prompt from: {chat_input}"]
+    """
+    conversation_history += f"<s>[INST] User:{chat_input}[/INST]\n"
     
     # Ollama API call
-    # url = "http://127.0.0.1:11434/v1/chat/completions"
     url = "http://192.168.2.142:11434/v1/chat/completions"
+    # url = "http://192.168.2.142:11434/api/chat"
     headers = {"Content-Type": "application/json"}
     payload = {
         "model": "llama3.1:70b",
         "messages": [
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": chat_input},
+            {"role": "user", "content": chat_prompt},
         ]
-        # "stream": False
     }
 
     try:
-        print(payload)
         response = requests.post(url, headers=headers, json=payload)
-        print(response)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+        response.raise_for_status()
         response_content = response.json()['choices'][0]['message']['content']
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         response_content = "Sorry, I couldn't process that request."
-        
+    
     # Append the model's response to the conversation history
-    conversation_history += f"Assistant: {response_content}</s>\n"
+    conversation_history += f"Assistant: {response_content}"
     
     # Save the updated conversation history back to the JSON file
     history[conversation_id] = conversation_history
@@ -82,7 +87,7 @@ def handle_new_message():
         return
     
     chat_input = new_message.get("content", "")
-    print("New message content:", chat_input)
+    # print("New message content:", chat_input)
     
     # Get AI response
     ai_response = get_llama_response(chat_input, conversation_id)
